@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from chatbot import chat_with_child
-import os
-import uvicorn
+
+
 
 
 app = FastAPI()
@@ -28,6 +28,5 @@ async def chat_endpoint(request: Request):
     return {"reply": reply}
 
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  # Railway sets PORT dynamically
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+
+
