@@ -3,7 +3,7 @@
 # from config import OPENAI_API_KEY, DEFAULT_MODEL
 
 # # Load system prompt
-# with open("prompts/system_prompt.txt", "r", encoding="utf-8") as f:
+# with open("system_prompt.txt", "r", encoding="utf-8") as f:
 #     SYSTEM_PROMPT = f.read()
 
 # # Initialize OpenAI client
@@ -45,7 +45,7 @@ from openai import OpenAI
 from config import OPENAI_API_KEY, DEFAULT_MODEL
 
 # Load system prompt
-with open("prompts/system_prompt.txt", "r", encoding="utf-8") as f:
+with open("system_prompt.txt", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
 
 # Initialize OpenAI client
