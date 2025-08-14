@@ -35,6 +35,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from chatbot import chat_with_child
 
 app = FastAPI()
+@app.get("/version")
+async def version():
+    return {
+        "status": "MindfullBuddy deployed",
+        "tag": "[MB]"
+    }
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,9 +49,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.get("/version")
-def version():
-    return {"status": "MindfullBuddy deployed", "tag": "[MB]"}
+
 
 @app.get("/")
 def root():
@@ -64,6 +68,7 @@ async def chat_endpoint(request: Request):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))  # Use Railway's assigned port
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
 
 
 
