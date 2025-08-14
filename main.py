@@ -43,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/version")
+def version():
+    return {"status": "MindfullBuddy deployed", "tag": "[MB]"}
 
 @app.get("/")
 def root():
@@ -52,12 +55,16 @@ def root():
 async def chat_endpoint(request: Request):
     data = await request.json()
     user_msg = data.get("text", "")
+    if user_msg.lower() in ["hi", "hello"]:
+        return {"reply": "Hello! You’ve reached MindfullBuddy 🤗 [MB]"}
+
     reply = chat_with_child(user_msg)
     return {"reply": reply}
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))  # Use Railway's assigned port
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
 
 
 
