@@ -26,72 +26,49 @@
 #     user_msg = data.get("text", "")
 #     reply = chat_with_child(user_msg)
 #     return {"reply": reply}
-import os, time
+
+
+import os
 import uvicorn
-from typing import Optional
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from chatbot import chat_with_child  # your existing helper
+from chatbot import chat_with_child
 
-app = FastAPI(title="MindfullBuddy API", version="1.0.0")
+app = FastAPI()
+@app.get("/version")
+async def version():
+    return {
+        "status": "MindfullBuddy deployed",
+        "tag": "[MB]"
+    }
 
-# CORS: open for testing; restrict later via ALLOW_ORIGINS env
-ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "*")
-allow_origins = ["*"] if ALLOW_ORIGINS.strip() == "*" else [o.strip() for o in ALLOW_ORIGINS.split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class ChatIn(BaseModel):
-    text: Optional[str] = None
-    message: Optional[str] = None
-    session_id: Optional[str] = None
 
-class ChatOut(BaseModel):
-    reply: str
+@app.get("/")
+def root():
+    return {"message": "TherapyKids Bot is live!"}
 
-@app.get("/", tags=["meta"])
-def root(): return {"ok": True, "service": "MindfullBuddy", "tag": "[MB]"}
-@app.get("/health", tags=["meta"])
-def health(): return {"ok": True}
-@app.get("/version", tags=["meta"])
-def version(): return {"status": "MindfullBuddy deployed", "tag": "[MB]"}
+@app.post("/chat")
+async def chat_endpoint(request: Request):
+    data = await request.json()
+    user_msg = data.get("text", "")
+    if user_msg.lower() in ["hi", "hello"]:
+        return {"reply": "Hello! You’ve reached MindfullBuddy 🤗 [MB]"}
 
-# tiny per-IP rate limit to prevent spam
-WINDOW_SEC = int(os.getenv("RL_WINDOW_SEC", "60"))
-MAX_REQ = int(os.getenv("RL_MAX_REQ", "40"))
-_last = {}  # ip -> [timestamps]
-def allow_request(ip: str) -> bool:
-    now = time.time()
-    arr = [t for t in _last.get(ip, []) if now - t < WINDOW_SEC]
-    if len(arr) >= MAX_REQ:
-        _last[ip] = arr; return False
-    arr.append(now); _last[ip] = arr; return True
-
-@app.post("/chat", response_model=ChatOut, tags=["chat"])
-async def chat_endpoint(body: ChatIn, request: Request):
-    ip = request.client.host if request.client else "unknown"
-    if not allow_request(ip):
-        raise HTTPException(status_code=429, detail="Too many requests, please slow down.")
-    user_msg = (body.text or body.message or "").strip()
-    if not user_msg:
-        raise HTTPException(status_code=400, detail="Missing 'text' or 'message'")
-    if user_msg.lower() in {"hi", "hello", "hey"}:
-        return ChatOut(reply="Hello! You’ve reached MindfullBuddy 🤗 [MB]")
-    try:
-        reply = chat_with_child(user_msg)
-        if not reply or not isinstance(reply, str):
-            raise RuntimeError("Empty/invalid reply from chat_with_child")
-        return ChatOut(reply=reply)
-    except Exception as e:
-        print("[MindfullBuddy][ERROR]", type(e).__name__, str(e))
-        raise HTTPException(status_code=500, detail="Chat service error")
+    reply = chat_with_child(user_msg)
+    return {"reply": reply}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 8080))  # Use Railway's assigned port
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
+
+
+
